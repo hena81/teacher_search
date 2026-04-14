@@ -1,0 +1,519 @@
+{% extends 'base.html' %}
+
+{% block title %}رفع البيانات - نظام توزيع الملاحظين{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto">
+    <!-- Page Header -->
+    <div class="bg-white/70 backdrop-blur-xl rounded-3xl shadow-2xl p-8 md:p-10 mb-8 border border-white/50 animate-fade-in-up">
+        <div class="flex flex-col md:flex-row items-center justify-between gap-6">
+            <div>
+                <h2 class="text-2xl md:text-3xl font-bold bg-gradient-to-r from-primary-800 to-primary-600 bg-clip-text text-transparent mb-2">رفع وإدارة البيانات</h2>
+                <p class="text-slate-600 font-medium">قم برفع ملف Excel يحتوي بيانات توزيع المعلمين على اللجان</p>
+            </div>
+            <div class="flex gap-3 flex-wrap">
+                <a href="{{ url_for('users') }}"
+                    class="px-5 py-2.5 bg-white text-primary-700 font-semibold rounded-xl border border-primary-100 hover:bg-primary-50 transition-all duration-300 flex items-center gap-2 shadow-sm hover:shadow-md group">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-primary-500 group-hover:scale-110 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" />
+                    </svg>
+                    إدارة المستخدمين
+                </a>
+                <a href="{{ url_for('api_template') }}"
+                    class="px-5 py-2.5 bg-gradient-to-l from-emerald-500 to-emerald-600 text-white font-semibold rounded-xl hover:from-emerald-600 hover:to-emerald-700 transition-all duration-300 flex items-center gap-2 shadow-sm hover:shadow-md hover:-translate-y-0.5">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                    </svg>
+                    تحميل القالب
+                </a>
+                <a href="{{ url_for('api_export') }}"
+                    class="px-5 py-2.5 bg-gradient-to-l from-purple-500 to-purple-600 text-white font-semibold rounded-xl hover:from-purple-600 hover:to-purple-700 transition-all duration-300 flex items-center gap-2 shadow-sm hover:shadow-md hover:-translate-y-0.5">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                    تصدير Excel
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Search Control Section -->
+    <div class="bg-white/70 backdrop-blur-xl rounded-3xl shadow-xl p-6 md:p-8 mb-8 border border-white/50 animate-fade-in-up" style="animation-delay: 0.1s;">
+        <div class="flex flex-col md:flex-row items-center justify-between gap-6">
+            <div class="flex items-center gap-4">
+                <div class="bg-gradient-to-br from-primary-100 to-primary-200 rounded-2xl p-4 shadow-inner">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-primary-600" fill="none"
+                        viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    </svg>
+                </div>
+                <div>
+                    <h3 class="text-xl font-bold text-slate-800 mb-1">التحكم في صفحة البحث</h3>
+                    <p class="text-sm font-medium text-slate-500">تفعيل أو إيقاف عرض نتائج البحث للمستخدمين</p>
+                </div>
+            </div>
+
+            <div class="flex items-center">
+                <div class="flex items-center gap-4 bg-white rounded-2xl px-6 py-4 border border-slate-200 shadow-sm">
+                    <span class="text-sm font-bold text-slate-700">نتائج البحث</span>
+                    <button type="button" id="searchToggle" onclick="toggleSearchStatus()"
+                        class="relative inline-flex h-9 w-16 items-center rounded-full transition-all duration-300 focus:outline-none focus:ring-4 focus:ring-primary-200 shadow-inner"
+                        aria-pressed="true" aria-label="تبديل نتائج البحث">
+                        <span id="toggleIndicator"
+                            class="inline-block h-7 w-7 transform rounded-full bg-white shadow-md transition-all duration-300 ring-0 translate-x-8"></span>
+                    </button>
+                    <span id="searchStatusText" class="text-sm font-bold min-w-16 text-center text-slate-500">جاري التحميل...</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══════════════════ Site Settings Panel ═══════════════════ -->
+    <div class="bg-white/70 backdrop-blur-xl rounded-3xl shadow-xl p-6 md:p-8 mb-8 border border-white/50 animate-fade-in-up" style="animation-delay: 0.15s;">
+        <div class="flex items-center gap-4 mb-6 pb-5 border-b border-slate-200">
+            <div class="bg-gradient-to-br from-violet-100 to-violet-200 rounded-2xl p-4 shadow-inner">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7 text-violet-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+            </div>
+            <div>
+                <h3 class="text-xl font-bold text-slate-800 mb-1">إعدادات الموقع</h3>
+                <p class="text-sm font-medium text-slate-500">تخصيص اسم المدرسة والعنوان الرئيسي والشعار</p>
+            </div>
+        </div>
+
+        <form method="POST" action="{{ url_for('api_save_site_settings') }}" enctype="multipart/form-data" class="space-y-5" id="siteSettingsForm">
+            {{ form.hidden_tag() }}
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                <!-- School Name -->
+                <div>
+                    <label class="block text-sm font-bold text-slate-700 mb-2" for="school_name">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 inline-block ml-1 text-violet-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                        </svg>
+                        اسم المدرسة
+                    </label>
+                    <input type="text" id="school_name" name="school_name"
+                        value="{{ site_school_name }}"
+                        class="w-full px-4 py-3 bg-white/80 border border-slate-200 rounded-2xl focus:border-violet-400 focus:ring-4 focus:ring-violet-100 transition-all duration-300 text-slate-800 outline-none shadow-inner"
+                        placeholder="e.g. ثانوية عبدالعزيز سعود البابطين">
+                </div>
+
+                <!-- Logo Upload -->
+                <div>
+                    <label class="block text-sm font-bold text-slate-700 mb-2" for="logo">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 inline-block ml-1 text-violet-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        </svg>
+                        شعار المدرسة
+                        <span class="text-slate-400 font-normal text-xs mr-1">(PNG، JPG، SVG)</span>
+                    </label>
+                    <div class="flex items-center gap-3">
+                        <img id="logoPreview" src="{{ site_logo_url }}" alt="الشعار الحالي" class="h-12 w-12 object-contain rounded-lg border border-slate-200 bg-white p-1">
+                        <label class="cursor-pointer flex-1 px-4 py-3 bg-white/80 border border-slate-200 rounded-2xl hover:border-violet-400 hover:bg-violet-50 transition-all duration-300 text-center text-slate-600 font-medium text-sm" for="logo">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 inline-block ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                            </svg>
+                            <span id="logoFileName">اختر صورة شعار</span>
+                            <input type="file" name="logo" id="logo" accept=".png,.jpg,.jpeg,.gif,.svg,.webp" class="hidden">
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Site Title (full width) -->
+            <div>
+                <label class="block text-sm font-bold text-slate-700 mb-2" for="site_title">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 inline-block ml-1 text-violet-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h8m-8 6h16" />
+                    </svg>
+                    العنوان الرئيسي لصفحة البحث
+                    <span class="text-slate-400 font-normal text-xs mr-1">(استخدم \n لفصل الأسطر)</span>
+                </label>
+                <textarea id="site_title" name="site_title" rows="2"
+                    class="w-full px-4 py-3 bg-white/80 border border-slate-200 rounded-2xl focus:border-violet-400 focus:ring-4 focus:ring-violet-100 transition-all duration-300 text-slate-800 outline-none shadow-inner resize-none"
+                    placeholder="توزيع المعلمين على لجان اختبارات الفترة الدراسية الأولى\nللعام الدراسي 2025-2026">{{ site_title }}</textarea>
+            </div>
+
+            <div class="flex justify-end">
+                <button type="submit"
+                    class="px-8 py-3.5 bg-gradient-to-l from-violet-600 to-violet-800 text-white font-bold rounded-2xl shadow-lg shadow-violet-500/30 hover:shadow-violet-500/50 hover:from-violet-700 hover:to-violet-900 transition-all transform hover:-translate-y-0.5 focus:ring-4 focus:ring-violet-200 flex items-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                    </svg>
+                    حفظ الإعدادات
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Upload Form -->
+    <div class="bg-white/70 backdrop-blur-xl rounded-3xl shadow-xl p-6 md:p-10 mb-8 border border-white/50 animate-fade-in-up" style="animation-delay: 0.2s;">
+        <form method="POST" action="{{ url_for('upload') }}" enctype="multipart/form-data" class="space-y-6">
+            {{ form.hidden_tag() }}
+
+            <div class="border-2 border-dashed border-primary-300 bg-white/50 rounded-3xl p-10 text-center hover:bg-primary-50 hover:border-primary-500 transition-all duration-300 group cursor-pointer"
+                id="dropZone" onclick="document.getElementById('fileInput').click()">
+                <div class="bg-primary-100 w-20 h-20 mx-auto rounded-full flex items-center justify-center mb-6 group-hover:scale-110 group-hover:bg-primary-200 transition-transform">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 text-primary-600" fill="none"
+                        viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                    </svg>
+                </div>
+
+                <p class="text-xl font-bold text-slate-700 mb-2">اسحب ملف Excel هنا أو انقر للاختيار</p>
+                <p class="text-slate-500 mb-6">صيغ الملفات المدعومة: .xlsx, .xls</p>
+
+                <div class="inline-block px-8 py-3.5 bg-white text-primary-600 font-bold border border-primary-200 rounded-xl shadow-sm group-hover:bg-primary-600 group-hover:text-white transition-colors">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 inline-block ml-2" fill="none"
+                        viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                    </svg>
+                    اختيار ملف
+                    <input type="file" name="file" accept=".xlsx,.xls" class="hidden" id="fileInput">
+                </div>
+
+                <p class="text-sm font-semibold text-slate-400 mt-6" id="fileName">لم يتم اختيار ملف</p>
+            </div>
+
+            <!-- Required Columns Info -->
+            <div class="bg-primary-50/50 backdrop-blur-sm rounded-2xl p-6 border border-primary-100 flex flex-col md:flex-row gap-6 items-start md:items-center">
+                <div class="flex items-center gap-2">
+                    <div class="bg-primary-100 p-2 rounded-lg">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-primary-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                    </div>
+                    <p class="font-bold text-primary-800 whitespace-nowrap">
+                        الأعمدة المطلوبة:
+                    </p>
+                </div>
+                <div class="flex flex-wrap gap-2">
+                    {% for col in ['الرقم المدني', 'الاسم', 'القسم', 'التكليف', 'اللجنة الرئيسية', 'اللجنة الفرعية', 'موقع اللجنة', 'اليوم', 'التاريخ'] %}
+                    <span class="px-4 py-1.5 bg-white rounded-lg text-sm font-semibold text-primary-700 border border-primary-200 shadow-sm">{{ col }}</span>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <div class="flex justify-center pt-4">
+                <button type="submit"
+                    class="px-10 py-4 bg-gradient-to-l from-primary-600 to-primary-800 text-white font-bold rounded-2xl shadow-lg shadow-primary-500/30 hover:shadow-primary-500/50 hover:from-primary-700 hover:to-primary-900 transition-all transform hover:-translate-y-1 focus:ring-4 focus:ring-primary-200 text-lg flex items-center gap-2 w-full md:w-auto justify-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none"
+                        viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                    </svg>
+                    رفع وحفظ البيانات
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Data Table Section -->
+    <div class="bg-white/70 backdrop-blur-xl rounded-3xl shadow-xl p-6 md:p-10 border border-white/50 animate-fade-in-up" style="animation-delay: 0.3s;">
+        <div class="flex flex-col md:flex-row items-center justify-between gap-4 mb-8 pb-6 border-b border-slate-200">
+            <h3 class="text-2xl font-bold text-slate-800 flex items-center gap-3">
+                <div class="bg-primary-100 p-2 rounded-lg text-primary-600">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none"
+                        viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4" />
+                    </svg>
+                </div>
+                السجلات الحالية
+                <span id="recordCount" class="text-sm font-medium text-slate-500 bg-slate-100 px-3 py-1 rounded-full">(جاري التحميل...)</span>
+            </h3>
+
+            <button type="button" onclick="showDeleteModal()"
+                class="px-5 py-2.5 bg-rose-50 text-rose-600 border border-rose-200 font-bold rounded-xl hover:bg-rose-100 hover:text-rose-700 transition-all flex items-center gap-2 shadow-sm">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24"
+                    stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                </svg>
+                مسح جميع البيانات
+            </button>
+        </div>
+
+        <!-- Data Table -->
+        <div class="overflow-x-auto">
+            <table id="assignmentsTable" class="w-full stripe hover" style="width:100%">
+                <thead>
+                    <tr class="bg-gray-100">
+                        <th class="px-4 py-3 text-right font-bold text-gray-700">الرقم المدني</th>
+                        <th class="px-4 py-3 text-right font-bold text-gray-700">الاسم</th>
+                        <th class="px-4 py-3 text-right font-bold text-gray-700">القسم</th>
+                        <th class="px-4 py-3 text-right font-bold text-gray-700">التكليف</th>
+                        <th class="px-4 py-3 text-right font-bold text-gray-700">اللجنة الرئيسية</th>
+                        <th class="px-4 py-3 text-right font-bold text-gray-700">اللجنة الفرعية</th>
+                        <th class="px-4 py-3 text-right font-bold text-gray-700">موقع اللجنة</th>
+                        <th class="px-4 py-3 text-right font-bold text-gray-700">اليوم</th>
+                        <th class="px-4 py-3 text-right font-bold text-gray-700">التاريخ</th>
+                    </tr>
+                </thead>
+                <tbody>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div id="deleteModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+    <div class="bg-white rounded-2xl p-8 max-w-md mx-4 shadow-2xl">
+        <div class="text-center">
+            <div class="bg-red-100 rounded-full p-4 w-20 h-20 mx-auto mb-4 flex items-center justify-center">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 text-red-600" fill="none" viewBox="0 0 24 24"
+                    stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+            </div>
+            <h3 class="text-xl font-bold text-gray-800 mb-2">هل أنت متأكد؟</h3>
+            <p class="text-gray-600 mb-6">سيتم حذف كل السجلات من قاعدة البيانات. لا يمكن التراجع عن هذا الإجراء.</p>
+
+            <div class="flex gap-4 justify-center">
+                <button onclick="hideDeleteModal()"
+                    class="px-6 py-3 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-all font-bold">
+                    إلغاء
+                </button>
+                <button onclick="deleteAllData()"
+                    class="px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-all font-bold">
+                    نعم، احذف الكل
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // File input handling
+    const fileInput = document.getElementById('fileInput');
+    const fileName = document.getElementById('fileName');
+    const dropZone = document.getElementById('dropZone');
+
+    fileInput.addEventListener('change', function () {
+        if (this.files.length > 0) {
+            fileName.textContent = this.files[0].name;
+            fileName.classList.add('text-blue-600', 'font-bold');
+        } else {
+            fileName.textContent = 'لم يتم اختيار ملف';
+            fileName.classList.remove('text-blue-600', 'font-bold');
+        }
+    });
+
+    // Logo preview handler
+    const logoInput = document.getElementById('logo');
+    const logoPreview = document.getElementById('logoPreview');
+    const logoFileNameSpan = document.getElementById('logoFileName');
+    if (logoInput) {
+        logoInput.addEventListener('change', function () {
+            if (this.files.length > 0) {
+                const file = this.files[0];
+                logoFileNameSpan.textContent = file.name;
+                const reader = new FileReader();
+                reader.onload = function (e) { logoPreview.src = e.target.result; };
+                reader.readAsDataURL(file);
+            }
+        });
+    }
+
+    // Drag and drop
+    dropZone.addEventListener('dragover', function (e) {
+        e.preventDefault();
+        this.classList.add('border-blue-500', 'bg-blue-50');
+    });
+
+    dropZone.addEventListener('dragleave', function (e) {
+        e.preventDefault();
+        this.classList.remove('border-blue-500', 'bg-blue-50');
+    });
+
+    dropZone.addEventListener('drop', function (e) {
+        e.preventDefault();
+        this.classList.remove('border-blue-500', 'bg-blue-50');
+
+        const files = e.dataTransfer.files;
+        if (files.length > 0) {
+            fileInput.files = files;
+            fileName.textContent = files[0].name;
+            fileName.classList.add('text-blue-600', 'font-bold');
+        }
+    });
+
+    // DataTables initialization
+    let table;
+
+    $(document).ready(function () {
+        table = $('#assignmentsTable').DataTable({
+            ajax: {
+                url: '/api/assignments',
+                dataSrc: 'data'
+            },
+            columns: [
+                { data: 'civil_no' },
+                { data: 'name' },
+                { data: 'department' },
+                { data: 'assignment' },
+                { data: 'main_committee' },
+                { data: 'sub_committee' },
+                { data: 'location' },
+                { data: 'day' },
+                { data: 'date' }
+            ],
+            language: {
+                url: '//cdn.datatables.net/plug-ins/1.13.7/i18n/ar.json',
+                search: "بحث:",
+                lengthMenu: "عرض _MENU_ سجل",
+                info: "عرض _START_ إلى _END_ من _TOTAL_ سجل",
+                infoEmpty: "لا توجد سجلات",
+                infoFiltered: "(تصفية من _MAX_ سجل)",
+                paginate: {
+                    first: "الأول",
+                    last: "الأخير",
+                    next: "التالي",
+                    previous: "السابق"
+                },
+                emptyTable: "لا توجد بيانات في الجدول"
+            },
+            responsive: true,
+            order: [[1, 'asc']],
+            pageLength: 25,
+            dom: '<"flex flex-col md:flex-row justify-between items-center mb-4"lf>rtip',
+            initComplete: function () {
+                updateRecordCount();
+                loadSearchStatus();
+            }
+        });
+    });
+
+    function updateRecordCount() {
+        fetch('/api/assignments')
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('recordCount').textContent = `(${data.count} سجل)`;
+            });
+    }
+
+    // Search Toggle Functions
+    function loadSearchStatus() {
+        fetch('/api/search_status')
+            .then(response => response.json())
+            .then(data => {
+                updateToggleUI(data.search_enabled);
+            })
+            .catch(error => {
+                console.error('Error loading search status:', error);
+                updateToggleUI(true); // Default to enabled
+            });
+    }
+
+    function updateToggleUI(isEnabled) {
+        const toggle = document.getElementById('searchToggle');
+        const indicator = document.getElementById('toggleIndicator');
+        const statusText = document.getElementById('searchStatusText');
+
+        if (isEnabled) {
+            toggle.classList.remove('bg-gray-300');
+            toggle.classList.add('bg-green-500');
+            indicator.classList.remove('translate-x-9');
+            indicator.classList.add('translate-x-1');
+            statusText.textContent = 'مفعّل';
+            statusText.classList.remove('text-red-600');
+            statusText.classList.add('text-green-600');
+        } else {
+            toggle.classList.remove('bg-green-500');
+            toggle.classList.add('bg-gray-300');
+            indicator.classList.remove('translate-x-1');
+            indicator.classList.add('translate-x-9');
+            statusText.textContent = 'متوقف';
+            statusText.classList.remove('text-green-600');
+            statusText.classList.add('text-red-600');
+        }
+    }
+
+    function toggleSearchStatus() {
+        const toggle = document.getElementById('searchToggle');
+        toggle.disabled = true;
+
+        fetch('/api/toggle_search', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCsrfToken()
+            }
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    updateToggleUI(data.search_enabled);
+                } else {
+                    alert('حدث خطأ: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('حدث خطأ في الاتصال بالخادم');
+            })
+            .finally(() => {
+                toggle.disabled = false;
+            });
+    }
+
+    // Delete Modal
+    function showDeleteModal() {
+        document.getElementById('deleteModal').classList.remove('hidden');
+        document.getElementById('deleteModal').classList.add('flex');
+    }
+
+    function hideDeleteModal() {
+        document.getElementById('deleteModal').classList.add('hidden');
+        document.getElementById('deleteModal').classList.remove('flex');
+    }
+
+    // Get CSRF token
+    function getCsrfToken() {
+        return document.querySelector('input[name="csrf_token"]').value;
+    }
+
+    function deleteAllData() {
+        fetch('/api/delete_all', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCsrfToken()
+            }
+        })
+            .then(response => response.json())
+            .then(data => {
+                hideDeleteModal();
+                if (data.success) {
+                    alert(data.message);
+                    table.ajax.reload();
+                    updateRecordCount();
+                } else {
+                    alert('حدث خطأ: ' + data.message);
+                }
+            })
+            .catch(error => {
+                hideDeleteModal();
+                alert('حدث خطأ في الاتصال بالخادم');
+                console.error('Error:', error);
+            });
+    }
+
+    // Close modal on outside click
+    document.getElementById('deleteModal').addEventListener('click', function (e) {
+        if (e.target === this) {
+            hideDeleteModal();
+        }
+    });
+</script>
+{% endblock %}
